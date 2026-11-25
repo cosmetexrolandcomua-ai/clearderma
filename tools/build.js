@@ -45,5 +45,7 @@ write('404.html', render('/404'));
 write('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   pages.map(p => `  <url><loc>${SITE}${p}</loc></url>`).join('\n') + '\n</urlset>\n');
 fs.cpSync(path.join(root, 'images'), path.join(out, 'images'), { recursive: true });
-fs.copyFileSync(path.join(root, 'robots.txt'), path.join(out, 'robots.txt'));
+for (const f of ['robots.txt', 'favicon.ico', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'site.webmanifest']) {
+  fs.copyFileSync(path.join(root, f), path.join(out, f));
+}
 console.log(`Готово: ${pages.length} сторінок у sitemap.xml`);
