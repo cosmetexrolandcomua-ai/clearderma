@@ -65,28 +65,54 @@ function getCatalog() {
 /* ===== Перевірка полів ===== */
 const FIELDS = {
   name: { label: 'ПІБ', min: 2, max: 100 },
-  phone: { label: 'Телефон', min: 10, max: 30 },
-  city: { label: 'Місто', min: 2, max: 100 },
-  delivery: { label: 'Спосіб доставки', min: 2, max: 80 },
-  payment: { label: 'Спосіб оплати', min: 2, max: 80 }
+  phone: { label: 'Телефон', min: 10, max: 30 }
 };
+
+const DELIVERY = {
+  np_branch: { label: 'Нова Пошта — відділення', city: true, address: 'Відділення' },
+  np_postomat: { label: 'Нова Пошта — поштомат', city: true, address: 'Поштомат' },
+  np_courier: { label: "Нова Пошта — кур'єр", city: true, address: 'Адреса' },
+  ukrposhta: { label: 'Укрпошта', city: true, address: 'Адреса' },
+  pickup: { label: 'Самовивіз (Київ)' }
+};
+const PAYMENT = ['Оплата карткою онлайн', 'Передоплата на картку', 'Накладений платіж', 'Оплата при отриманні'];
+
+// Керівні символи й переноси рядків прибираємо, щоб не можна було підробити рядки повідомлення
+function clean(raw) {
+  return typeof raw === 'string' ? raw.replace(/[\p{C}\p{Zl}\p{Zp}\s]+/gu, ' ').trim() : '';
+}
+
+function checkLength(value, label, min, max) {
+  const length = [...value].length;
+  if (length < min || length > max) throw new OrderError(400, 'invalid_field', `Перевірте поле «${label}».`);
+  return value;
+}
+
+function validateDelivery(body) {
+  const type = Object.hasOwn(DELIVERY, body.deliveryType) ? DELIVERY[body.deliveryType] : null;
+  if (!type) throw new OrderError(409, 'form_changed', 'Форма замовлення оновилася. Оновіть сторінку й заповніть її ще раз.');
+  if (!PAYMENT.includes(body.payment)) throw new OrderError(400, 'invalid_field', 'Перевірте поле «Спосіб оплати».');
+  return {
+    delivery: type.label,
+    addressLabel: type.address,
+    city: type.city ? checkLength(clean(body.city), 'Місто', 2, 100) : '',
+    address: type.address ? checkLength(clean(body.address), type.address, 1, 200) : '',
+    payment: body.payment,
+    comment: checkLength(clean(body.comment), 'Коментар', 0, 300)
+  };
+}
 
 function validateCustomer(body) {
   const customer = {};
   for (const [key, rule] of Object.entries(FIELDS)) {
-    const raw = body[key];
-    // Керівні символи й переноси рядків прибираємо, щоб не можна було підробити рядки повідомлення
-    const value = typeof raw === 'string' ? raw.replace(/[\p{C}\p{Zl}\p{Zp}\s]+/gu, ' ').trim() : '';
-    if (value.length < rule.min || value.length > rule.max) {
-      throw new OrderError(400, 'invalid_field', `Перевірте поле «${rule.label}».`);
-    }
+    const value = checkLength(clean(body[key]), rule.label, rule.min, rule.max);
     customer[key] = value;
   }
   const digits = customer.phone.replace(/\D/g, '');
   if (!/^[0-9+()\s-]+$/.test(customer.phone) || digits.length < 10 || digits.length > 15) {
     throw new OrderError(400, 'invalid_field', 'Перевірте поле «Телефон».');
   }
-  return customer;
+  return { ...customer, ...validateDelivery(body) };
 }
 
 function validateItems(items, products) {
@@ -134,15 +160,17 @@ function buildMessage(customer, lines, total) {
     '',
     `👤 <b>Клієнт:</b> ${escapeHtml(customer.name)}`,
     `📞 <b>Телефон:</b> ${escapeHtml(customer.phone)}`,
-    `📍 <b>Місто:</b> ${escapeHtml(customer.city)}`,
     `🚚 <b>Доставка:</b> ${escapeHtml(customer.delivery)}`,
+    customer.city === '' ? undefined : `📍 <b>Місто:</b> ${escapeHtml(customer.city)}`,
+    customer.address === '' ? undefined : `🏤 <b>${customer.addressLabel}:</b> ${escapeHtml(customer.address)}`,
     `💳 <b>Оплата:</b> ${escapeHtml(customer.payment)}`,
+    customer.comment === '' ? undefined : `💬 <b>Коментар:</b> ${escapeHtml(customer.comment)}`,
     '',
     '📦 <b>Товари:</b>',
     list,
     '',
     `💰 <b>Сума до сплати:</b> ${total} грн`
-  ].join('\n');
+  ].filter(line => line !== undefined).join('\n');
 }
 
 async function sendToTelegram(text) {
