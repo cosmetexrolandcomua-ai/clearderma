@@ -4,13 +4,25 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>clearderma — японська та корейська дерматокосметика</title>
-<meta name="robots" content="index, follow, noimageindex" />
-<link rel="canonical" href="https://clearderma.com.ua/" />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="clearderma" />
-<meta property="og:title" content="clearderma — японська та корейська дерматокосметика" />
-<meta property="og:image" content="https://clearderma.com.ua/images/hero/hero-body.webp" />
-<meta name="description" content="clearderma — інтернет-магазин преміальної азійської косметики: догляд за шкірою, тілом, волоссям, чоловічий догляд, SPF та очищення. Оригінальна продукція з Японії та Кореї." />
+<!--seo-->
+<meta data-seo name="description" content="Японська та корейська косметика: догляд за шкірою, тілом і волоссям, чоловічі засоби та SPF. Доставка Новою Поштою по Україні." />
+<meta data-seo name="robots" content="index, follow, noimageindex" />
+<link data-seo rel="canonical" href="https://clearderma.com.ua/" />
+<meta data-seo property="og:url" content="https://clearderma.com.ua/" />
+<meta data-seo property="og:type" content="website" />
+<meta data-seo property="og:site_name" content="clearderma" />
+<meta data-seo property="og:locale" content="uk_UA" />
+<meta data-seo property="og:title" content="clearderma — японська та корейська дерматокосметика" />
+<meta data-seo property="og:description" content="Японська та корейська косметика: догляд за шкірою, тілом і волоссям, чоловічі засоби та SPF. Доставка Новою Поштою по Україні." />
+<meta data-seo property="og:image" content="https://clearderma.com.ua/images/hero/hero-body.webp" />
+<meta data-seo name="twitter:card" content="summary_large_image" />
+<meta data-seo name="twitter:title" content="clearderma — японська та корейська дерматокосметика" />
+<meta data-seo name="twitter:description" content="Японська та корейська косметика: догляд за шкірою, тілом і волоссям, чоловічі засоби та SPF. Доставка Новою Поштою по Україні." />
+<meta data-seo name="twitter:image" content="https://clearderma.com.ua/images/hero/hero-body.webp" />
+<script data-seo type="application/ld+json">{"@context":"https://schema.org","@type":"OnlineStore","name":"clearderma","url":"https://clearderma.com.ua/","image":"https://clearderma.com.ua/images/hero/hero-body.webp","telephone":"+380756758498","email":"sevcenkobibigul@gmail.com","address":{"@type":"PostalAddress","streetAddress":"вул. Набережна, 7","addressLocality":"Ічня","addressRegion":"Чернігівська область","postalCode":"16700","addressCountry":"UA"}}</script>
+<script data-seo type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"clearderma","url":"https://clearderma.com.ua/","inLanguage":"uk"}</script>
+<!--/seo-->
+<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,6 +142,7 @@
         <li><a href="/payment" class="hover:text-white transition">Оплата і доставка</a></li>
         <li><a href="/returns" class="hover:text-white transition">Обмін і повернення</a></li>
         <li><a href="/privacy" class="hover:text-white transition">Політика конфіденційності</a></li>
+        <li><a href="/karta-saitu" class="hover:text-white transition">Карта сайту</a></li>
       </ul>
     </div>
     <div class="col-span-2 md:col-span-1">
@@ -227,6 +240,117 @@ function slugify(s){
 const SLUG_BY_ID = {}, ID_BY_SLUG = {};
 PRODUCTS.forEach(p=>{ let s=slugify(p.name); if(ID_BY_SLUG[s]!==undefined) s=s+'-'+p.id; SLUG_BY_ID[p.id]=s; ID_BY_SLUG[s]=p.id; });
 
+/* ===== SEO: метадані сторінок і карта сайту =====
+ * Єдине джерело для браузера та для tools/build.js, який під час публікації
+ * створює окремий HTML кожної сторінки і sitemap.xml. */
+const SITE = 'https://clearderma.com.ua';
+const SHOP = { name:'clearderma', phone:'+380756758498', email:'sevcenkobibigul@gmail.com' };
+const HOME_IMAGE = '/images/hero/hero-body.webp';
+
+const INFO_PAGES = {
+  about:   { name:'Про нас', title:'Про інтернет-магазин clearderma', desc:'clearderma — український інтернет-магазин японської та корейської косметики: асортимент, підхід до відбору засобів і доставка.' },
+  payment: { name:'Оплата і доставка', title:'Оплата і доставка косметики', desc:'Доставка Новою Поштою та Укрпоштою по Україні, безкоштовно від 1500 грн. Способи оплати замовлення в магазині clearderma.' },
+  returns: { name:'Обмін і повернення', title:'Обмін і повернення товару', desc:'Умови обміну та повернення в clearderma: товар неналежної якості, помилка в замовленні або пошкодження під час доставки.' },
+  privacy: { name:'Політика конфіденційності', title:'Політика конфіденційності', desc:'Як clearderma обробляє та захищає персональні дані покупців: які дані збираються, для чого вони потрібні та які права ви маєте.' },
+  'karta-saitu': { name:'Карта сайту', title:'Карта сайту', desc:'Усі сторінки магазину clearderma: розділи каталогу, товари та інформація про оплату, доставку, обмін і повернення.' },
+};
+
+const SEO_CATEGORY = {
+  '':    ['Каталог японської та корейської косметики', 'Каталог clearderma: догляд за шкірою обличчя, за тілом і чоловіча косметика з Японії та Кореї. Ціни, склад, доставка по Україні.'],
+  skin:  ['Догляд за шкірою: японська та корейська косметика', 'Пінки, маски, сироватка та SPF з Японії й Кореї для щоденного догляду за шкірою обличчя. Ціни, склад і доставка по Україні.'],
+  body:  ['Догляд за тілом: креми та молочко з Японії', 'Креми для рук, молочко та крем для тіла Loshi й ReLUCE з Японії. Склад, ціни та доставка Новою Поштою по всій Україні.'],
+  men:   ['Чоловічий догляд: японські пінки для вмивання', 'Чоловічі пінки для вмивання та гоління Kankitsu Ohji з Японії: цитрусові, глиняна та для проблемної шкіри. Доставка по Україні.'],
+};
+
+/* артикул: [title до 60 символів, description до 160] — для нового товару метадані складаються з назви й короткого опису */
+const SEO_PRODUCT = {
+  '958':  ['Skinmiso Real Clean Peeling Gel 120 г: пілінг-скатка', 'Корейський пілінг-гель Skinmiso 120 г: під час масажу згортається в катишки та забирає ороговілі клітини й себум.'],
+  '965':  ['Skinmiso Spot Repairing Serum 30 мл: точкова сироватка', 'Сироватка Skinmiso для точкового нанесення на прищі та сліди після них: ніацинамід, BHA, центела. Носик-аплікатор, 30 мл.'],
+  '1342': ['Loshi Horse Oil: крем із кінським жиром 220 г', 'Японський крем Loshi з кінським жиром, маслом ши та сечовиною для обличчя й тіла. Банка 220 г, доставка по Україні.'],
+  '1343': ['Крем для рук Loshi з кінським жиром 45 г', 'Компактний японський крем для рук Loshi без барвників і мінеральної олії: кінський жир, масло ши, сквалан. Туба 45 г.'],
+  '1344': ['Loshi CICA Protect: захисний крем для рук 80 г', 'Захисний крем для рук Loshi з кінським жиром, компонентами центели та ніацинамідом. Аромат білого чаю, туба 80 г.'],
+  '1345': ['Loshi Q10: насичений крем для рук 80 г', 'Крем для рук Loshi Rich Moist з кінським жиром, коензимом Q10, оліями авокадо та аргани. Для сухої й зрілої шкіри, 80 г.'],
+  '1353': ['KEANA SAUNA: розігрівальна маска-скраб 70 г', 'Японська маска-скраб dotbye з теплим ефектом: цукровий скраб, три ферменти, глутатіон і ніацинамід. Аромат цитрусового чаю.'],
+  '1348': ['Loshi Charcoal Mud: пінка з вугіллям і мулом 120 г', 'Пінка для вмивання Loshi з вугіллям бінтьотан і морським мулом Окінави. Щільна піна проти жирного блиску, туба 120 г.'],
+  '1351': ['B:ample Vital White Enrich: тканинні маски, 7 шт', 'Сім тканинних масок B:ample з есенцією без доданої води: колаген, ретинол, глутатіон, ніацинамід. 140 мл есенції, Японія.'],
+  '1356': ['Kankitsu Ohji Clear Whip: чоловіча пінка 360 мл', 'Чоловіча пінка з помпою для вмивання й гоління: цитрусовий аромат, ментол, чайне дерево та центела. Флакон 360 мл, Японія.'],
+  '1358': ['Kankitsu Ohji Acne Care: пінка для чоловіків 360 мл', 'Японська пінка для шкіри, схильної до прищів, з ізопропілметилфенолом і дикалію гліциризинатом. Готова піна з помпи, 360 мл.'],
+  '1359': ['Kankitsu Ohji Clay Foam: глиняна пінка 120 г', 'Чоловіча глиняна пінка з бентонітом, мулом Окінави, саліциловою та азелаїновою кислотами. Для жирної шкіри, 120 г.'],
+  '1360': ['Melano Search Vita-C Foam: пінка-скраб 120 г', 'Пінка-скраб Kankitsu Ohji з трьома формами вітаміну C, ферментами та глинами. Аромат лимонаду, туба 120 г, Японія.'],
+  '1361': ['Savon Doron Charcoal: пінка з глиною та вугіллям 120 г', 'Глиняна пінка Savon Doron з вугіллям, трьома ферментами та центелою для очищення пор. Аромат ефірних олій, 120 г.'],
+  '1362': ['Savon Doron Vita-C: глиняна пінка з вітамінами 120 г', 'Пінка для вмивання Savon Doron: глини, три ферменти, похідні вітамінів C та A. Аромат бергамота, туба 120 г, Японія.'],
+  '1363': ['ReLUCE Shiny Freesia: молочко для тіла 300 мл', 'Парфумоване молочко для тіла ReLUCE з ароматом фрезії та груші: вітамін C і фермент галактоміцетів. Помпа, 300 мл.'],
+  '1364': ['ReLUCE Shiny Freesia: парфумований крем для рук 50 г', 'Крем для рук і нігтів ReLUCE з ароматом фрезії: три форми вітаміну C, галактоміцети та глутатіон. Туба 50 г, Японія.'],
+  '1354': ['dotbye Black Strawberry: пінка з вугіллям 120 г', 'Чорна пінка для вмивання dotbye з вугіллям, екстрактом полуниці та ферментами. Пружна піна з ароматом полуниці, 120 г.'],
+  '1365': ['ReLUCE Glow Bouquet: молочко для тіла 300 мл', 'Насичене молочко для тіла ReLUCE з глутатіоном, вітаміном C та ніацинамідом. Аромат квіткового букета, 300 мл, Японія.'],
+  '1366': ['ReLUCE Glow Bouquet: крем для рук 50 г', 'Парфумований крем для рук і нігтів ReLUCE з глутатіоном і трьома формами вітаміну C. Квітковий аромат, туба 50 г.'],
+  '1382': ['Latte Botanical Cleanse Gel: гель для демакіяжу 300 мл', 'Японський гель для зняття макіяжу, яким можна користуватися мокрими руками: рослинні олії та соєвий фермент, 300 мл.'],
+  '1385': ['Шампунь з японською м’ятою та амінокислотами 485 мл', 'Шампунь для шкіри голови з японською м’ятою й ментолом: охолоджує, прибирає запах і жир. Амінокислотні ПАР, 485 мл.'],
+  '1474': ['Dr.Richesse Revine Sunscreen SPF 50+ PA++++ 50 мл', 'Корейський сонцезахисний крем для обличчя SPF 50+ PA++++ з лінійки P.E.C 360: PDRN, екзосоми женьшеню, колаген. 50 мл.'],
+  '1475': ['Dr.Richesse Revine Bubble Cleanser: пінка 150 мл', 'Слабокисла корейська пінка з помпою, що змиває SPF і не стягує шкіру: цераміди, гіалуронова та лимонна кислоти. 150 мл.'],
+};
+
+const productPath = p => `/product/${SLUG_BY_ID[p.id]}`;
+const productByPart = s => PRODUCTS.find(p => p.id === (ID_BY_SLUG[s] !== undefined ? ID_BY_SLUG[s] : Number(s)));
+/* Усі сторінки, які мають бути в пошуку (sitemap.xml і карта сайту) */
+function sitePaths(){
+  return ['/', '/catalog', ...MAIN_ORDER.map(k => `/catalog/${k}`), ...PRODUCTS.map(productPath), ...Object.keys(INFO_PAGES).map(k => `/${k}`)];
+}
+const withShop = t => (t.length + 13 <= 65 ? `${t} — clearderma` : t);
+const clip = (t, n) => t.length <= n ? t : t.slice(0, n - 1).replace(/\s+\S*$/, '') + '…';
+const crumbs = list => ({ '@context':'https://schema.org', '@type':'BreadcrumbList',
+  itemListElement: [['Головна','/'], ...list].map(([name, path], i) => ({ '@type':'ListItem', position:i + 1, name, item: SITE + path })) });
+
+function pageMeta(path){
+  const parts = path.split('/').filter(Boolean);
+  const m = { title:'Сторінку не знайдено — clearderma', desc:'Такої сторінки немає. Перейдіть у каталог японської та корейської косметики clearderma.',
+              path, type:'website', image:HOME_IMAGE, robots:'noindex, follow', ld:[], found:false };
+  const ok = (title, desc, extra) => Object.assign(m, { title, desc, robots:'index, follow, noimageindex', found:true }, extra);
+  if(!parts.length){
+    ok('clearderma — японська та корейська дерматокосметика',
+       'Японська та корейська косметика: догляд за шкірою, тілом і волоссям, чоловічі засоби та SPF. Доставка Новою Поштою по Україні.',
+       { ld:[
+         { '@context':'https://schema.org', '@type':'OnlineStore', name:SHOP.name, url:SITE + '/', image:SITE + HOME_IMAGE, telephone:SHOP.phone, email:SHOP.email,
+           address:{ '@type':'PostalAddress', streetAddress:'вул. Набережна, 7', addressLocality:'Ічня', addressRegion:'Чернігівська область', postalCode:'16700', addressCountry:'UA' } },
+         { '@context':'https://schema.org', '@type':'WebSite', name:SHOP.name, url:SITE + '/', inLanguage:'uk' } ] });
+  } else if(parts[0] === 'catalog' && parts.length <= 2 && (!parts[1] || MAINS[parts[1]])){
+    const key = parts[1] || '', c = MAINS[key], list = PRODUCTS.filter(p => !key || p.mainKey === key);
+    const [title, desc] = SEO_CATEGORY[key] || [`${c.label}: японська та корейська косметика`, `${c.label}: каталог clearderma з цінами, складом і доставкою по Україні.`];
+    ok(withShop(title), desc, { image: list[0].images[0], ld:[
+      crumbs(c ? [['Каталог','/catalog'], [c.label, path]] : [['Каталог','/catalog']]),
+      { '@context':'https://schema.org', '@type':'ItemList', itemListElement:list.map((p, i) => ({ '@type':'ListItem', position:i + 1, name:p.name, url:SITE + productPath(p) })) } ] });
+  } else if(parts[0] === 'product' && parts.length === 2 && productByPart(parts[1])){
+    const p = productByPart(parts[1]), c = MAINS[p.mainKey];
+    const [title, desc] = SEO_PRODUCT[p.sku] || [clip(p.name, 60), clip(p.short, 160)];
+    ok(withShop(title), desc, { path:productPath(p), type:'product', image:p.images[0], product:p, ld:[
+      { '@context':'https://schema.org', '@type':'Product', name:p.name, sku:p.sku, category:`${c.label} / ${p.subCat}`, description:p.short, image:p.images.map(i => SITE + i),
+        offers:{ '@type':'Offer', url:SITE + productPath(p), price:p.price, priceCurrency:'UAH', itemCondition:'https://schema.org/NewCondition',
+                 availability:'https://schema.org/' + (p.inStock ? 'InStock' : 'OutOfStock') } },
+      crumbs([['Каталог','/catalog'], [c.label, `/catalog/${p.mainKey}`], [p.name, productPath(p)]]) ] });
+  } else if(parts.length === 1 && INFO_PAGES[parts[0]]){
+    const i = INFO_PAGES[parts[0]];
+    ok(withShop(i.title), i.desc, { ld:[crumbs([[i.name, path]])] });
+  } else if(parts.length === 1 && parts[0] === 'checkout'){
+    Object.assign(m, { title:'Оформлення замовлення — clearderma', desc:'Оформлення замовлення в магазині clearderma з доставкою Новою Поштою або Укрпоштою.', found:true });
+  }
+  return m;
+}
+
+/* HTML блоку <head> між позначками seo */
+function metaTags(m){
+  const e = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const url = SITE + (m.path === '' ? '/' : m.path), image = SITE + m.image;
+  const tag = (attr, name, value) => `<meta data-seo ${attr}="${name}" content="${e(value)}" />`;
+  const lines = [ tag('name','description',m.desc), tag('name','robots',m.robots) ];
+  if(m.found) lines.push(`<link data-seo rel="canonical" href="${e(url)}" />`, tag('property','og:url',url));
+  lines.push(tag('property','og:type',m.type), tag('property','og:site_name',SHOP.name), tag('property','og:locale','uk_UA'),
+    tag('property','og:title',m.title), tag('property','og:description',m.desc), tag('property','og:image',image),
+    tag('name','twitter:card','summary_large_image'), tag('name','twitter:title',m.title), tag('name','twitter:description',m.desc), tag('name','twitter:image',image));
+  if(m.product) lines.push(tag('property','product:price:amount',m.product.price), tag('property','product:price:currency','UAH'));
+  m.ld.forEach(d => lines.push(`<script data-seo type="application/ld+json">${JSON.stringify(d).replace(/</g,'\\u003c')}<\/script>`));
+  return lines.join('\n');
+}
+
 function currentPath(){
   let p = location.pathname || '/';
   if(p.length>1) p = p.replace(/\/+$/,'').replace(/\/index\.html$/,'') || '/';
@@ -243,28 +367,11 @@ function go(path){
 }
 
 /* ===== Meta ===== */
-const SITE = 'https://clearderma.com.ua', HOME_TITLE = document.title;
-const HOME_DESC = document.querySelector('meta[name=description]').content;
-function setMeta(parts, found){
-  const set=(sel,attr,val)=>{ const el=document.head.querySelector(sel); if(el) el.setAttribute(attr,val); };
-  let title=HOME_TITLE, desc=HOME_DESC, image=SITE+'/images/hero/hero-body.webp', ld=null, index=found;
-  const name={payment:'Оплата і доставка',returns:'Обмін і повернення',privacy:'Політика конфіденційності',about:'Про нас',checkout:'Оформлення замовлення'}[parts[0]];
-  if(!found) title='Сторінку не знайдено — clearderma';
-  else if(parts[0]==='catalog'){ const c=mainByKey(parts[1]); title=(c?`${c.label}: японська та корейська косметика`:'Каталог японської та корейської косметики')+' — clearderma'; desc=c?`${c.label}: каталог японської та корейської косметики clearderma з цінами, складом і доставкою Новою Поштою по Україні.`:HOME_DESC; }
-  else if(parts[0]==='product'){
-    const p=byId(ID_BY_SLUG[parts[1]]!==undefined?ID_BY_SLUG[parts[1]]:parts[1]);
-    title=`${p.name} — clearderma`; desc=p.short; image=SITE+imgOf(p);
-    ld={'@context':'https://schema.org','@type':'Product',name:p.name,sku:p.sku,description:p.short,image:p.images.map(i=>SITE+i),
-        offers:{'@type':'Offer',url:`${SITE}/product/${SLUG_BY_ID[p.id]}`,price:p.price,priceCurrency:'UAH',availability:'https://schema.org/'+(p.inStock?'InStock':'OutOfStock')}};
-  }
-  else if(name){ title=`${name} — clearderma`; if(parts[0]==='checkout') index=false; }
-  document.title=title;
-  set('meta[name=description]','content',desc);
-  set('meta[property="og:title"]','content',title); set('meta[property="og:image"]','content',image);
-  set('meta[name=robots]','content', index?'index, follow, noimageindex':'noindex, follow');
-  set('link[rel=canonical]','href', SITE+(parts.length?'/'+parts.join('/'):'/'));
-  const old=document.getElementById('ld'); if(old) old.remove();
-  if(ld){ const el=document.createElement('script'); el.type='application/ld+json'; el.id='ld'; el.textContent=JSON.stringify(ld); document.head.append(el); }
+function setMeta(path){
+  const m = pageMeta(path);
+  document.title = m.title;
+  document.head.querySelectorAll('[data-seo]').forEach(el=>el.remove());
+  document.head.insertAdjacentHTML('beforeend', metaTags(m));
 }
 
 /* ===== State ===== */
@@ -615,7 +722,20 @@ function viewAbout(){
   </section>`;
 }
 
-function viewNotFound(){ return `<section class="view-enter max-w-[600px] mx-auto px-5 py-32 text-center"><p class="font-display text-7xl mb-4">404</p><p class="text-mute mb-8">Сторінку не знайдено.</p><a href="/" class="btn-dark inline-block px-8 py-4 rounded-xl text-sm">На головну</a></section>`; }
+function viewSiteMap(){
+  const link=(href,text,strong)=>`<li><a href="${href}" class="${strong?'font-medium text-pine':'text-mute'} hover:text-jade transition">${text}</a></li>`;
+  const column=(title,items)=>`<section class="bg-paper border border-line rounded-[20px] p-5 lg:p-7 break-inside-avoid mb-5"><h2 class="font-display font-semibold text-[26px] leading-tight mb-4">${title}</h2><ul class="space-y-2.5 text-[15px] leading-snug">${items}</ul></section>`;
+  return `<section class="view-enter max-w-[1360px] mx-auto px-4 lg:px-8 pt-8 lg:pt-12">
+    <h1 class="font-display font-medium text-[40px] lg:text-[58px] leading-none mb-7 lg:mb-9">Карта сайту</h1>
+    <div class="md:columns-2 xl:columns-3 gap-5">
+      ${column('Магазин', link('/','Головна',true)+link('/catalog','Каталог товарів',true)+mainList().map(c=>link(`/catalog/${c.key}`,c.label)).join(''))}
+      ${column('Інформація', Object.entries(INFO_PAGES).filter(([k])=>k!=='karta-saitu').map(([k,i])=>link('/'+k,i.name)).join(''))}
+      ${mainList().map(c=>column(c.label, link(`/catalog/${c.key}`,'Усі товари розділу',true)+PRODUCTS.filter(p=>p.mainKey===c.key).map(p=>link(productPath(p),p.name)).join(''))).join('')}
+    </div>
+  </section>`;
+}
+
+function viewNotFound(){ return `<section class="view-enter max-w-[600px] mx-auto px-5 py-32 text-center"><h1 class="font-display text-7xl mb-4">404</h1><p class="text-mute mb-8">Сторінку не знайдено.</p><a href="/" class="btn-dark inline-block px-8 py-4 rounded-xl text-sm">На головну</a></section>`; }
 
 /* ===== CART RENDER ===== */
 function renderCart(){
@@ -878,7 +998,7 @@ function router(){
   const parts = currentPath().split('/').filter(Boolean);
   const app = document.getElementById('app');
   let html, found=true;
-  const PAGES={payment:viewPayment,returns:viewReturns,privacy:viewPrivacy,about:viewAbout,checkout:viewCheckout};
+  const PAGES={'karta-saitu':viewSiteMap,payment:viewPayment,returns:viewReturns,privacy:viewPrivacy,about:viewAbout,checkout:viewCheckout};
   if(parts.length===0){ html=viewHome(); }
   else if(parts[0]==='catalog' && parts.length<=2 && (!parts[1] || mainByKey(parts[1]))){
     html=viewCatalog(parts[1]);
@@ -887,7 +1007,7 @@ function router(){
   else if(parts.length===1 && PAGES[parts[0]]){ html=PAGES[parts[0]](); }
   else { html=viewNotFound(); found=false; }
   app.innerHTML=html;
-  setMeta(parts, found);
+  setMeta(currentPath());
   window.scrollTo({top:0,behavior:'instant'});
   if(parts[0]==='catalog' && found){ renderControls(); renderGrid(); renderSeo(); }
   if(parts[0]==='checkout'){ initCheckout(); }

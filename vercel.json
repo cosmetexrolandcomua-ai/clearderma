@@ -1,9 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "node tools/build.js",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "functions": {
     "api/order.js": { "includeFiles": "index.html" }
-  },
-  "rewrites": [
-    { "source": "/((?!api/|images/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
-  ]
+  }
 }
