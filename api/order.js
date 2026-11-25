@@ -1,21 +1,29 @@
 'use strict';
 
 /*
- * POST /api/order — приймає замовлення з сайту й надсилає його в Telegram.
+ * POST /api/order — приймає замовлення з сайту, зберігає його файлом у ПРИВАТНОМУ репозиторії GitHub
+ * і, якщо налаштовано, надсилає в Telegram. Замовлення прийнято, коли спрацював хоча б один спосіб.
  * Змінні середовища (Vercel → Settings → Environment Variables):
- *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+ *   GITHUB_ORDERS_TOKEN — fine-grained токен з доступом Contents: Read and write лише до репозиторію замовлень
+ *   GITHUB_ORDERS_REPO  — необов'язково, за замовчуванням cosmetexrolandcomua-ai/clearderma-orders
+ *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — необов'язково
+ * У файлах замовлень є персональні дані, тому в публічний репозиторій функція не пише.
  * Ціни беруться з масиву PRODUCTS в index.html (див. includeFiles у vercel.json),
  * тому окремо оновлювати їх тут не потрібно.
  */
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const MAX_LINES = 30;      // різних товарів в одному замовленні (ліміт довжини повідомлення Telegram)
 const MAX_QTY = 99;        // штук одного товару
 const MAX_BODY = 20000;    // символів у тілі запиту
 const MAX_ITEM_NAME = 70;  // символів назви товару в повідомленні
 const TELEGRAM_TIMEOUT_MS = 8000;
+const GITHUB_TIMEOUT_MS = 5000;
+const GITHUB_ATTEMPTS = 3;
+const DEFAULT_ORDERS_REPO = 'cosmetexrolandcomua-ai/clearderma-orders';
 
 class OrderError extends Error {
   constructor(status, code, message) {
@@ -151,12 +159,12 @@ function shorten(text, max) {
   return chars.length > max ? chars.slice(0, max - 1).join('') + '…' : text;
 }
 
-function buildMessage(customer, lines, total) {
+function buildMessage(order, customer, lines, total) {
   const list = lines.map(({ product, qty }) =>
     `- ${escapeHtml(shorten(product.name, MAX_ITEM_NAME))} (Арт: ${escapeHtml(product.sku || '—')}) x${qty} = ${product.price * qty} грн`
   ).join('\n');
   return [
-    '🔔 <b>Нове замовлення clearderma!</b> 🛒',
+    `🔔 <b>Нове замовлення clearderma № ${order.number}</b> 🛒`,
     '',
     `👤 <b>Клієнт:</b> ${escapeHtml(customer.name)}`,
     `📞 <b>Телефон:</b> ${escapeHtml(customer.phone)}`,
@@ -194,6 +202,111 @@ async function sendToTelegram(text) {
   if (!res.ok || !data || !data.ok) {
     throw new Error(`Telegram rejected the message: HTTP ${res.status} ${(data && data.description) || ''}`);
   }
+}
+
+/* ===== GitHub ===== */
+// Номер і час замовлення за Києвом
+function createOrder() {
+  const parts = {};
+  for (const p of new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Kyiv', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date())) parts[p.type] = p.value;
+  const code = crypto.randomBytes(3).toString('hex').toUpperCase();
+  const day = `${parts.year}-${parts.month}-${parts.day}`;
+  return {
+    number: `${day.replace(/-/g, '')}-${code}`,
+    date: `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}:${parts.second}`,
+    file: `orders/${parts.year}-${parts.month}/${day}_${parts.hour}-${parts.minute}-${parts.second}_${code}.md`
+  };
+}
+
+function escapeMarkdown(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/[\\`*_[\]|~#!]/g, '\\$&');
+}
+
+function buildFile(order, customer, lines, total) {
+  const rows = [
+    ['Дата й час', order.date],
+    ['Отримувач', customer.name],
+    ['Телефон', customer.phone],
+    ['Доставка', customer.delivery],
+    ['Місто', customer.city],
+    [customer.addressLabel, customer.address],
+    ['Оплата', customer.payment],
+    ['Коментар', customer.comment]
+  ].filter(([label, value]) => label && value);
+  return [
+    `# Замовлення № ${order.number}`,
+    '',
+    '| Поле | Значення |',
+    '|---|---|',
+    ...rows.map(([label, value]) => `| ${label} | ${escapeMarkdown(value)} |`),
+    '',
+    '| Артикул | Товар | Ціна, грн | К-сть | Сума, грн |',
+    '|---|---|---:|---:|---:|',
+    ...lines.map(({ product, qty }) =>
+      `| ${escapeMarkdown(product.sku || '—')} | ${escapeMarkdown(product.name)} | ${product.price} | ${qty} | ${product.price * qty} |`),
+    '',
+    `**Разом: ${total} грн**`,
+    ''
+  ].join('\n');
+}
+
+async function github(method, url, body) {
+  try {
+    return await fetch(`https://api.github.com/repos/${url}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_ORDERS_TOKEN.trim()}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'clearderma-orders',
+        'Content-Type': 'application/json'
+      },
+      body: body && JSON.stringify(body),
+      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS)
+    });
+  } catch (err) {
+    throw new Error(`GitHub request failed (${err && err.name})`);
+  }
+}
+
+async function saveToGitHub(order, text) {
+  const repo = (process.env.GITHUB_ORDERS_REPO || DEFAULT_ORDERS_REPO).trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('GITHUB_ORDERS_REPO is invalid');
+
+  // Перевіряємо щоразу: репозиторій могли зробити публічним
+  const info = await github('GET', repo);
+  const data = await info.json().catch(() => null);
+  if (!info.ok || !data) throw new Error(`GitHub repository is not available: HTTP ${info.status}`);
+  if (data.private !== true) throw new Error('GitHub orders repository is public, refusing to save personal data');
+
+  for (let attempt = 1; ; attempt++) {
+    const res = await github('PUT', `${repo}/contents/${order.file}`, {
+      message: `Замовлення ${order.number}`,
+      content: Buffer.from(text, 'utf8').toString('base64')
+    });
+    if (res.ok) return;
+    // 409: у ту саму мить записується інше замовлення
+    if (res.status !== 409 || attempt >= GITHUB_ATTEMPTS) throw new Error(`GitHub rejected the file: HTTP ${res.status}`);
+    await new Promise(resolve => setTimeout(resolve, 200 * attempt + Math.random() * 200));
+  }
+}
+
+/* ===== Надсилання ===== */
+async function deliver(customer, lines, total) {
+  const order = createOrder();
+  const jobs = [];
+  if (process.env.GITHUB_ORDERS_TOKEN) jobs.push(saveToGitHub(order, buildFile(order, customer, lines, total)));
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) jobs.push(sendToTelegram(buildMessage(order, customer, lines, total)));
+  if (jobs.length === 0) throw new Error('No order channel: set GITHUB_ORDERS_TOKEN or TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID');
+
+  const results = await Promise.allSettled(jobs);
+  const failed = results.filter(r => r.status === 'rejected').map(r => r.reason.message);
+  if (failed.length === results.length) throw new Error(failed.join('; '));
+  if (failed.length) console.error(`Order ${order.number}: one channel failed:`, failed.join('; '));
+  return order;
 }
 
 /* ===== Запит ===== */
@@ -246,8 +359,8 @@ module.exports = async function handler(req, res) {
       throw new OrderError(409, 'price_changed', 'Ціни на сайті оновилися. Оновіть сторінку й перевірте суму замовлення.');
     }
 
-    await sendToTelegram(buildMessage(customer, lines, total));
-    return res.status(200).json({ ok: true, total });
+    const order = await deliver(customer, lines, total);
+    return res.status(200).json({ ok: true, total, number: order.number });
   } catch (err) {
     if (err instanceof OrderError) {
       return res.status(err.status).json({ ok: false, error: err.code, message: err.message });
