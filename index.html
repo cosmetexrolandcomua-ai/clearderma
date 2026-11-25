@@ -647,45 +647,30 @@ function showSuccess(name,total,phone){
   </div>`);
 }
 
-/* ===== TELEGRAM BOT INTEGRATION ===== */
-function sendToTelegram(formData, cartData, totalSum) {
-  const token = '8877626129:AAHCPwFauLUVqe6adqHV0CZp2745aUjIq6c';
-  const chatId = '8522043344';
-  
-  let orderList = cartData.map(item => {
-    const p = byId(item.id);
-    return `- ${p.name} (Арт: ${p.sku || '—'}) x${item.qty} = ${p.price * item.qty} грн`;
-  }).join('\n');
-
-  const message = `
-🔔 <b>Нове замовлення clearderma!</b> 🛒
-
-👤 <b>Клієнт:</b> ${formData.name}
-📞 <b>Телефон:</b> ${formData.phone}
-📍 <b>Місто:</b> ${formData.city}
-🚚 <b>Доставка:</b> ${formData.delivery}
-💳 <b>Оплата:</b> ${formData.payment}
-
-📦 <b>Товари:</b>
-${orderList}
-
-💰 <b>Сума до сплати:</b> ${totalSum} грн
-  `;
-
-  fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: message,
-      parse_mode: 'HTML'
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if(!data.ok) console.error('Помилка відправки в Telegram:', data.description);
-  })
-  .catch(err => console.error('Мережева помилка Telegram API:', err));
+/* ===== ORDER API ===== */
+/* Токен бота зберігається лише на сервері: api/order.js */
+const ORDER_FAIL_TEXT = 'Не вдалося надіслати замовлення. Спробуйте ще раз або зателефонуйте: +38 (075) 675-84-98.';
+async function sendOrder(formData, cartData, totalSum) {
+  const items = cartData.filter(i => byId(i.id)).map(i => ({ id: Number(i.id), qty: Number(i.qty) }));
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const res = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...formData, items, total: totalSum }),
+      signal: ctrl.signal
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && data.ok) return { ok: true, total: data.total };
+    const userError = data && data.message && (res.status === 400 || res.status === 409);
+    return { ok: false, message: userError ? data.message : ORDER_FAIL_TEXT };
+  } catch (err) {
+    console.error('Помилка надсилання замовлення:', err);
+    return { ok: false, message: ORDER_FAIL_TEXT };
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /* ===== ROUTER ===== */
@@ -768,25 +753,46 @@ document.addEventListener('click',(e)=>{
 });
 document.getElementById('overlay').addEventListener('click',()=>{ closeCart(); closeModal(); closeMenu(); });
 document.addEventListener('input',(e)=>{ if(e.target.dataset && e.target.dataset.action==='search'){ state.search=e.target.value; renderGrid(); } });
-document.addEventListener('submit',(e)=>{
+document.addEventListener('submit', async (e)=>{
   if(e.target.id==='checkout-form'){
     e.preventDefault();
-    const f=e.target, 
-          name=f.name.value.trim(), 
-          phone=f.phone.value.trim(), 
+    const f=e.target;
+    if(f.dataset.sending) return;
+    const name=f.name.value.trim(),
+          phone=f.phone.value.trim(),
           city=f.city.value.trim(),
           delivery=f.delivery.value,
           payment=f.payment.value,
           total=cartTotal();
-    
     const formData = { name, phone, city, delivery, payment };
-    
-    // Відправка в Telegram перед очищенням кошика
-    sendToTelegram(formData, state.cart, total);
+    const btn=f.querySelector('button[type="submit"]'), btnText=btn.textContent;
 
+    let errorBox=f.querySelector('[data-order-error]');
+    if(!errorBox){
+      errorBox=document.createElement('p');
+      errorBox.dataset.orderError='';
+      errorBox.setAttribute('role','alert');
+      errorBox.className='text-sm'; errorBox.style.color='#B3261E';
+      btn.before(errorBox);
+    }
+    errorBox.textContent=''; errorBox.hidden=true;
+
+    f.dataset.sending='1';
+    btn.disabled=true; btn.textContent='Надсилаємо…'; btn.style.opacity='.6';
+    const result = await sendOrder(formData, state.cart, total);
+    delete f.dataset.sending;
+    btn.disabled=false; btn.textContent=btnText; btn.style.opacity='';
+
+    if(!result.ok){
+      errorBox.textContent=result.message; errorBox.hidden=false;
+      if(!f.isConnected) alert(result.message); /* вікно закрили під час надсилання */
+      return;
+    }
+
+    /* Кошик очищаємо й показуємо успіх лише після підтвердження сервера */
     const firstName=name.split(/\\s+/)[0]||name;
     state.cart=[]; saveCart(); updateBadge(); renderCart();
-    showSuccess(firstName,total,phone);
+    showSuccess(firstName,result.total,phone);
   }
 });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeCart(); closeModal(); closeMenu(); } });
