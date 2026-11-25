@@ -248,15 +248,15 @@ const SHOP = { name:'clearderma', phone:'+380756758498', email:'sevcenkobibigul@
 const HOME_IMAGE = '/images/hero/hero-body.webp';
 
 const INFO_PAGES = {
-  about:   { name:'Про нас', title:'Про інтернет-магазин clearderma', desc:'clearderma — український інтернет-магазин японської та корейської косметики: асортимент, підхід до відбору засобів і доставка.' },
-  payment: { name:'Оплата і доставка', title:'Оплата і доставка косметики', desc:'Доставка Новою Поштою та Укрпоштою по Україні, безкоштовно від 1500 грн. Способи оплати замовлення в магазині clearderma.' },
-  returns: { name:'Обмін і повернення', title:'Обмін і повернення товару', desc:'Умови обміну та повернення в clearderma: товар неналежної якості, помилка в замовленні або пошкодження під час доставки.' },
-  privacy: { name:'Політика конфіденційності', title:'Політика конфіденційності', desc:'Як clearderma обробляє та захищає персональні дані покупців: які дані збираються, для чого вони потрібні та які права ви маєте.' },
-  'karta-saitu': { name:'Карта сайту', title:'Карта сайту', desc:'Усі сторінки магазину clearderma: розділи каталогу, товари та інформація про оплату, доставку, обмін і повернення.' },
+  about:   { name:'Про нас', title:'Про інтернет-магазин clearderma', desc:'Clearderma — український інтернет-магазин японської та корейської косметики: асортимент, підхід до відбору засобів і доставка.' },
+  payment: { name:'Оплата і доставка', title:'Оплата і доставка косметики', desc:'Доставка Новою Поштою та Укрпоштою по Україні, безкоштовно від 1500 грн. Способи оплати замовлення в магазині Clearderma.' },
+  returns: { name:'Обмін і повернення', title:'Обмін і повернення товару', desc:'Умови обміну та повернення в Clearderma: товар неналежної якості, помилка в замовленні або пошкодження під час доставки.' },
+  privacy: { name:'Політика конфіденційності', title:'Політика конфіденційності', desc:'Як Clearderma обробляє та захищає персональні дані покупців: які дані збираються, для чого вони потрібні та які права ви маєте.' },
+  'karta-saitu': { name:'Карта сайту', title:'Карта сайту', desc:'Усі сторінки магазину Clearderma: розділи каталогу, товари та інформація про оплату, доставку, обмін і повернення.' },
 };
 
 const SEO_CATEGORY = {
-  '':    ['Каталог японської та корейської косметики', 'Каталог clearderma: догляд за шкірою обличчя, за тілом і чоловіча косметика з Японії та Кореї. Ціни, склад, доставка по Україні.'],
+  '':    ['Каталог японської та корейської косметики', 'Каталог Clearderma: догляд за шкірою обличчя, за тілом і чоловіча косметика з Японії та Кореї. Ціни, склад, доставка по Україні.'],
   skin:  ['Догляд за шкірою: японська та корейська косметика', 'Пінки, маски, сироватка та SPF з Японії й Кореї для щоденного догляду за шкірою обличчя. Ціни, склад і доставка по Україні.'],
   body:  ['Догляд за тілом: креми та молочко з Японії', 'Креми для рук, молочко та крем для тіла Loshi й ReLUCE з Японії. Склад, ціни та доставка Новою Поштою по всій Україні.'],
   men:   ['Чоловічий догляд: японські пінки для вмивання', 'Чоловічі пінки для вмивання та гоління Kankitsu Ohji з Японії: цитрусові, глиняна та для проблемної шкіри. Доставка по Україні.'],
@@ -303,7 +303,7 @@ const crumbs = list => ({ '@context':'https://schema.org', '@type':'BreadcrumbLi
 
 function pageMeta(path){
   const parts = path.split('/').filter(Boolean);
-  const m = { title:'Сторінку не знайдено — clearderma', desc:'Такої сторінки немає. Перейдіть у каталог японської та корейської косметики clearderma.',
+  const m = { title:'Сторінку не знайдено — clearderma', desc:'Такої сторінки немає. Перейдіть у каталог японської та корейської косметики Clearderma.',
               path, type:'website', image:HOME_IMAGE, robots:'noindex, follow', ld:[], found:false };
   const ok = (title, desc, extra) => Object.assign(m, { title, desc, robots:'index, follow, noimageindex', found:true }, extra);
   if(!parts.length){
@@ -315,7 +315,7 @@ function pageMeta(path){
          { '@context':'https://schema.org', '@type':'WebSite', name:SHOP.name, url:SITE + '/', inLanguage:'uk' } ] });
   } else if(parts[0] === 'catalog' && parts.length <= 2 && (!parts[1] || MAINS[parts[1]])){
     const key = parts[1] || '', c = MAINS[key], list = PRODUCTS.filter(p => !key || p.mainKey === key);
-    const [title, desc] = SEO_CATEGORY[key] || [`${c.label}: японська та корейська косметика`, `${c.label}: каталог clearderma з цінами, складом і доставкою по Україні.`];
+    const [title, desc] = SEO_CATEGORY[key] || [`${c.label}: японська та корейська косметика`, `${c.label}: каталог Clearderma з цінами, складом і доставкою по Україні.`];
     ok(withShop(title), desc, { image: list[0].images[0], ld:[
       crumbs(c ? [['Каталог','/catalog'], [c.label, path]] : [['Каталог','/catalog']]),
       { '@context':'https://schema.org', '@type':'ItemList', itemListElement:list.map((p, i) => ({ '@type':'ListItem', position:i + 1, name:p.name, url:SITE + productPath(p) })) } ] });
@@ -331,7 +331,7 @@ function pageMeta(path){
     const i = INFO_PAGES[parts[0]];
     ok(withShop(i.title), i.desc, { ld:[crumbs([[i.name, path]])] });
   } else if(parts.length === 1 && parts[0] === 'checkout'){
-    Object.assign(m, { title:'Оформлення замовлення — clearderma', desc:'Оформлення замовлення в магазині clearderma з доставкою Новою Поштою або Укрпоштою.', found:true });
+    Object.assign(m, { title:'Оформлення замовлення — clearderma', desc:'Оформлення замовлення в магазині Clearderma з доставкою Новою Поштою або Укрпоштою.', found:true });
   }
   return m;
 }
